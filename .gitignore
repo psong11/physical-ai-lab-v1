@@ -9,11 +9,15 @@ build/
 
 # Data (large files — don't commit to git)
 data/raw/
+data/dataset/
 data/labels/
 *.pt
 *.onnx
 *.engine
 *.trt
+
+# Training runs (large output files)
+runs/
 
 # OS
 .DS_Store

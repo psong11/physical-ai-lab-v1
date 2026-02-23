@@ -98,13 +98,18 @@
 **Goal:** Write first architecture doc: sensor → perception → reasoning → action
 
 ### What I Did
+- Wrote `docs/architecture.md` — first architecture doc mapping the system to the Physical AI pipeline
+- Documented all four stages: Sensor → Perception → Reasoning → Action
+- Mapped each script (live_detect, detect_and_decide, detect_zones) to pipeline stages
+- Added current limitations table with fix timeline
+- Added architecture evolution diagram (Week 1 → Week 12)
 
-
-### What's Next
-
+### What's Next (Day 6-7)
+- Build desk presence detector: track when I'm at desk, log session durations
+- Builds on detect_zones.py with session timing logic
 
 ### Blockers/Notes
-
+- None — on track for Week 1
 
 ---
 

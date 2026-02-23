@@ -113,14 +113,24 @@
 
 ---
 
-## Day 6-7 — Weekend, Feb 27-28
-**Goal:** Build mini use case — desk presence detector
+## Day 6 — Friday, Feb 27
+**Goal:** Build desk presence detector with session tracking
 
 ### What I Did
+- Built `src/01_webcam_detector/desk_tracker.py` — desk presence tracker
+- Three-state machine: AWAY → PRESENT → MAYBE_AWAY (grace period) → AWAY
+- 15-second grace period prevents short absences (looking away, grabbing coffee) from ending a session
+- CSV logging: each session written to `data/desk_sessions.csv` (date, start, end, duration)
+- On-screen session timer shows live elapsed time (e.g., "AT DESK — 12m 34s")
+- Grace period countdown displayed on screen when person disappears
+- Session count overlay on video feed
+- Quit summary: total sessions, total time, average/longest/shortest session
+- If quit mid-session, that session is still logged
 
-
-### What's Next
-
+### What's Next (Day 7)
+- Test the tracker in a real desk session
+- Stretch: add daily/weekly summary stats, or a simple terminal report script
 
 ### Blockers/Notes
+- None
 

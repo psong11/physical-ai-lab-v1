@@ -154,6 +154,9 @@ If both tracks fail, borrow a native x86 Ubuntu machine (friend's PC, cheap used
 | Using a SATA SSD | Must be **PCIe NVMe** |
 | Expecting HDMI output | Dev kit uses **DisplayPort** only |
 | Using Ubuntu 24.04 | Stick with **Ubuntu 22.04** for JetPack 6.x |
+| Using `system_profiler SPUSBDataType` to check USB | May return empty — use **System Information app** instead |
+| Spending hours debugging VM USB passthrough | If `lsusb` works but flash fails, **switch to native Linux or Track B** |
+| Worrying a failed flash bricked the Jetson | Flash fails before writing anything — **board is untouched** |
 
 ---
 
@@ -164,6 +167,49 @@ UTM x86 emulation on Apple Silicon has known USB passthrough limitations. From U
 > "Due to the way macOS/iOS handles USB capturing (without custom kernel drivers), it is not possible to get a proper hardware reset on the connected device."
 
 If `lsusb` in the VM doesn't show the Jetson, don't waste time debugging — go straight to Track B.
+
+---
+
+## Troubleshooting Log (2026-02-24)
+
+### What happened
+
+SDK Manager downloads + host setup completed fine in the UTM VM. Flash step failed repeatedly.
+
+### "Device not ready for flash" error in SDK Manager
+
+SDK Manager couldn't initiate the flash. Root cause: USB passthrough from Mac → UTM VM wasn't reliable enough.
+
+- **Verify your Mac sees the Jetson first** (not the VM):
+  - System Information → USB → look for "APX" by NVIDIA Corp.
+  - `system_profiler SPUSBDataType` may return empty on some Macs — use System Information app instead
+- If Mac sees it but VM doesn't → USB passthrough problem
+- If Mac doesn't see it → cable or recovery mode problem
+
+### Command-line flash attempt (bypassing SDK Manager)
+
+Tried flashing directly via `l4t_initrd_flash.sh` from the VM terminal. The downloads from SDK Manager are reusable — they live at `~/nvidia/nvidia_sdk/JetPack_6.2.2_Linux_JETSON_ORIN_NANO_TARGETS/Linux_for_Tegra/`.
+
+```bash
+cd ~/nvidia/nvidia_sdk/JetPack_6.2.2_Linux_JETSON_ORIN_NANO_TARGETS/Linux_for_Tegra/
+sudo tools/l4t_flash_prerequisites.sh
+sudo ./tools/kernel_flash/l4t_initrd_flash.sh --external-device nvme0n1p1 \
+  -p "-c ./bootloader/generic/cfg/flash_t234_qspi.xml" \
+  -c ./tools/kernel_flash/flash_l4t_t234_nvme.xml \
+  --showlogs --network usb0 jetson-orin-nano-devkit external
+```
+
+Result: Device was detected (got BR_CID), but bulk USB data transfer failed instantly (`ERROR: might be timeout in USB write. Return value 3`). Small USB queries worked, bulk transfers did not. Switching VM USB controller to USB 2.0 (EHCI) didn't help.
+
+### Why the Jetson is still safe
+
+The failure happened before any data was written to the Jetson. The tool was trying to send bootloader data into RAM (not storage) and the transfer was rejected. The NVMe drive and QSPI firmware are untouched — the board is in the same state as out of the box.
+
+### Conclusion
+
+**Flashing a Jetson through a UTM VM on Apple Silicon is unreliable.** The VM can handle small USB control transfers (device detection, queries) but cannot handle the bulk data transfers required for flashing. This is a QEMU/UTM limitation, not a cable or Jetson issue.
+
+**Recommended path: use a native Linux machine** (borrow one, buy a cheap used ThinkPad, or use Track B with an SD card).
 
 ---
 
